@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://supereggbert.github.io/aframe-htmlembed-component/dist/build.js"></script>
+    <style>
+      #test {
+        background: #eee;
+        width: 500px;
+        height: 500px;
+        padding: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <a-entity id="main" htmlembed position="0 2.5 -5">
+        <div id="test">
+          <h1>Hello World</h1>
+          <p>This is HTML</p>
+        </div>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>

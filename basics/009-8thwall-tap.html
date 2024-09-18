@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.8thwall.com/web/aframe/8frame-1.2.0.min.js"></script>
+    <script src="https://cdn.8thwall.com/web/xrextras/xrextras.js"></script>
+    <script async src="https://apps.8thwall.com/xrweb?appKey=f0LPUhzxQRN1kc4sv4mM4ZRsl663KCFL7y7fj3Uc5wN7TNKY7TbKuJlwz5uu0zGbngfYA3"></script>
+
+  </head>
+
+  <body>
+      <a-scene
+        tap-place
+        xrextras-almost-there
+        xrextras-loading
+        xrextras-runtime-error
+        renderer="colorManagement:true"
+        xrweb="allowedDevices:any;"
+      >
+
+      <a-camera
+        id="camera"
+        position="0 8 0"
+        raycaster="objects: .cantap"
+        cursor="
+          fuse: false;
+          rayOrigin: mouse;">
+      </a-camera>
+
+      <a-box
+        id="ground"
+        class="cantap"
+        scale="1000 2 1000"
+        position="0 -1 0"
+        material="shader: shadow; transparent: true; opacity: 0.4"
+        shadow>
+      </a-box>
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent('tap-place', {
+        init() {
+          const ground = document.getElementById('ground')
+          ground.addEventListener('click', (event) => {
+            // Create new entity for the new object
+            const newElement = document.createElement('a-sphere')
+
+            // The raycaster gives a location of the touch in the scene
+            const touchPoint = event.detail.intersection.point
+            newElement.setAttribute('position', touchPoint)
+
+            const randomYRotation = Math.random() * 360
+            newElement.setAttribute('rotation', `0 ${randomYRotation} 0`)
+
+            newElement.setAttribute('shadow', {
+              receive: false,
+            })
+
+            this.el.sceneEl.appendChild(newElement)
+          })
+        },
+      })
+
+    </script>
+
+
+  </body>
+</html>

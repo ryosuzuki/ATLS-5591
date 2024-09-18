@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello, WebVR! • A-Frame</title>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-camera>
+        <a-cursor click-event></a-cursor>
+      </a-camera>
+      <a-assets>
+        <!-- Download from https://github.com/8thwall/web/blob/master/examples/aframe/placeground/tree.glb -->
+        <a-asset-item id="treeModel" src="https://cdn.glitch.global/52eae4f7-4ab7-4502-92fd-d4e1f1b8fd72/tree.glb?v=1642537665424"></a-asset-item>
+      </a-assets>
+      <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4" shadow></a-plane>
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent('click-event', {
+        init() {
+          this.el.addEventListener('click', (event) => {
+            const newElement = document.createElement('a-entity')
+            let position = event.detail.intersection.point
+            console.log(position)
+            newElement.setAttribute('position', position)
+            newElement.setAttribute('gltf-model', '#treeModel')
+            this.el.sceneEl.appendChild(newElement)
+          })
+        }
+      })
+    </script>
+
+  </body>
+</html>

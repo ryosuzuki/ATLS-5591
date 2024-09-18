@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+  </head>
+  <body>
+    <h1>Speech Recognition</h1>
+    <p id="result"></p>
+
+    <script>
+      window.SpeechRecognition =
+        window.SpeechRecognition || webkitSpeechRecognition;
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      let finalTranscript = "";
+      let interimTranscript = "";
+
+      let resultEl = document.querySelector("#result");
+      recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          let transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+            interimTranscript = "";
+          } else {
+            interimTranscript = transcript;
+          }
+          let text = finalTranscript + interimTranscript;
+          resultEl.innerText = text
+        }
+      };
+      recognition.start();
+    </script>
+  </body>
+</html>

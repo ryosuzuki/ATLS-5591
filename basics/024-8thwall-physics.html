@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <!-- Note: A-Frame v1.2.0 didn't work for some reasons -->
+<!--     <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script> -->
+    <script src=
+"https://cdn.8thwall.com/web/aframe/8frame-1.1.0.min.js"></script>
+    <script src="https://cdn.8thwall.com/web/xrextras/xrextras.js"></script>
+    <script async src="https://apps.8thwall.com/xrweb?appKey=f0LPUhzxQRN1kc4sv4mM4ZRsl663KCFL7y7fj3Uc5wN7TNKY7TbKuJlwz5uu0zGbngfYA3"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+
+
+    <script>
+      
+AFRAME.registerComponent('click-event', {
+        init: function() {
+          this.el.addEventListener('click', (event) => {
+            console.log('click')
+            let position = event.detail.intersection.point
+            let sphereEl = document.createElement('a-sphere')
+            sphereEl.setAttribute('radius', 0.1)
+            sphereEl.setAttribute('position', position)
+            sphereEl.setAttribute('dynamic-body', 'shape: auto')
+            this.el.sceneEl.appendChild(sphereEl)
+          })
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <a-scene
+        tap-place
+        xrextras-almost-there
+        xrextras-loading
+        xrextras-runtime-error
+        renderer="colorManagement:true"
+        xrweb="allowedDevices:any;"
+        physics="debug: true"
+    >
+      <a-camera
+        id="camera"
+        position="0 8 0"
+        raycaster="objects: *"
+        cursor="
+          fuse: false;
+          rayOrigin: mouse;">
+      </a-camera>
+<!--       <a-camera raycaster=
+"objects: *" cursor="rayOrigin: mouse;"></a-camera> -->
+      <a-plane
+        static-body
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="4"
+        height="4"
+        color="#7BC8A4"
+      ></a-

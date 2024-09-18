@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <!-- Note: A-Frame v1.2.0 didn't work for some reasons -->
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+  </head>
+  <body>
+    <a-scene physics="debug: true">
+      <a-entity
+        dynamic-body
+        geometry="primitive: plane; width: 1; height: auto;"
+        material="opacity: 0.0; transparent: true"
+        position="0 1 -4"
+        text="value: Hello World; color: black; align: center; width: 4"
+      ></a-entity>
+      <a-plane
+        static-body
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="4"
+        height="4"
+        color="#7BC8A4"
+      ></a-plane>
+    </a-scene>
+  </body>
+</html>

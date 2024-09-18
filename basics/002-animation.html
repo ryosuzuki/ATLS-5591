@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script>
+      let radius = 1
+      AFRAME.registerComponent('size-change', {
+        tick: function() {
+          radius = radius + 0.001
+          this.el.setAttribute('radius', radius)
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <a-scene background="color: #FAFAFA">
+      <a-sphere size-change position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow></a-sphere>
+    </a-scene>
+  </body>
+</html>

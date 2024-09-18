@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdn.8thwall.com/web/aframe/8frame-1.2.0.min.js"></script>
+    <script src="https://cdn.8thwall.com/web/xrextras/xrextras.js"></script>
+    <script
+      async
+      src="https://apps.8thwall.com/xrweb?appKey=f0LPUhzxQRN1kc4sv4mM4ZRsl663KCFL7y7fj3Uc5wN7TNKY7TbKuJlwz5uu0zGbngfYA3"
+    ></script>
+  </head>
+
+  <body>
+    <a-scene
+      landing-page
+      xrextras-loading
+      xrextras-runtime-error
+      xrextras-pause-on-hidden
+      renderer="colorManagement:true"
+      xrface="mirroredDisplay: true; meshGeometry: eyes, face, mouth; cameraDirection: front; allowedDevices: any;"
+    >
+      <a-camera></a-camera>
+
+      <xrextras-faceanchor>
+        <xrextras-face-attachment point="noseBridge">
+          <a-plane
+            position="0.25 0 0"
+            height="0.25"
+            width="0.4"
+            side="back"
+            color="#7611B6"
+            opacity="0.5"
+          ></a-plane>
+          <a-plane
+            position="-0.25 0 0"
+            height="0.25"
+            width="0.4"
+            side="back"
+            color="#FFC828"
+            opacity="0.5"
+          ></a-plane>
+        </xrextras-face-attachment>
+        <xrextras-face-attachment point="mouth">
+          <a-box
+            width="0.2"
+            height="0.2"
+            depth="0.2"
+            material="color:red;"
+          ></a-box>
+        </xrextras-face-attachment>
+      </xrextras-faceanchor>
+    </a-scene>
+  </body>
+</html>

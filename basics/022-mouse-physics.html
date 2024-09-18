@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <!-- Note: A-Frame v1.2.0 didn't work for some reasons -->
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+
+    <script>
+      AFRAME.registerComponent('click-event', {
+        init: function() {
+          this.el.addEventListener('click', (event) => {
+            console.log('click')
+            let position = event.detail.intersection.point
+            let sphereEl = document.createElement('a-sphere')
+            sphereEl.setAttribute('radius', 0.1)
+            sphereEl.setAttribute('position', position)
+            sphereEl.setAttribute('dynamic-body', 'shape: auto')
+            this.el.sceneEl.appendChild(sphereEl)
+          })
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <a-scene physics="debug: true">
+      <a-camera raycaster="objects: *" cursor="rayOrigin: mouse;"></a-camera>
+      <a-plane
+        static-body
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="4"
+        height="4"
+        color="#7BC8A4"
+      ></a-plane>
+      <a-plane
+        click-event
+        position="0 0 -4"
+        width="100"
+        height="100"
+        material="opacity: 0.4; transparent: true"
+      ></a-plane>
+    </a-scene>
+
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+
+  </head>
+  <body>
+    <a-scene physics="debug: true">>
+      <a-text
+        id="result"
+        value="Hello World"
+        color="white"
+        position="-1.5 0.1 -4"
+        width="3"
+        rotation="-90 0 0"
+      ></a-text>
+      <a-plane
+        static-body
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="4"
+        height="4"
+        color="#7BC8A4"
+        shadow
+      ></a-plane>
+    </a-scene>
+
+    <script>
+      window.SpeechRecognition =
+        window.SpeechRecognition || webkitSpeechRecognition;
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      let finalTranscript = "";
+      let interimTranscript = "";
+
+      let resultEl = document.querySelector("#result");
+      recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          let transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+            interimTranscript = "";
+          } else {
+            interimTranscript = transcript;
+          }
+          let text = finalTranscript + interimTranscript;
+//           resultEl.setAttribute("value", text);
+          console.log(text)
+          let words = text.split(' ')
+          for (let word of words) {
+            let sphereEl = document.createElement('a-text')
+            sphereEl.setAttribute('value', word)
+            sphereEl.setAttribute('color', 'black')
+            sphereEl.setAttribute('position', `${Math.random()*3} ${Math.random()* 3} -4`)
+            sphereEl.setAttribute('dynamic-body', 'shape: sphere')
+            let sceneEl = document.querySelector('a-scene')
+            sceneEl.appendChild(sphereEl)
+          }
+        }
+      };
+      recognition.start();
+    </script>
+  </body>
+</html>
