@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script>
+      const socket = io();
+      socket.on('message', (data) => {
+        console.log(data)
+        let p = document.createElement('p')
+        p.innerHTML = data
+        $('#response').append(p)
+      })
+      $(function() {
+        $('button').click(() => {
+          let message = $('#message').val()
+          console.log(message)
+          socket.emit('message', message)
+        })
+      })
+    </script>
+  </head>
+
+  <body>
+    <input id="message" type="text" />
+    <button>Send</button>
+    <div id="response"></div>
+  </body>
+</html>

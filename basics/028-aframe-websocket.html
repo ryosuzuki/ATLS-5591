@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script>
+      const socket = io();
+      socket.on('message', (position) => {
+        console.log(position)
+        createBoxAt(position)
+      })
+
+      AFRAME.registerComponent('click-event', {
+        init: function () {
+          this.el.addEventListener('click', event => {
+            let position = event.detail.intersection.point
+            socket.emit('message', position)
+          });
+        }
+      });
+
+      function createBoxAt(position) {
+        let sceneEl = document.querySelector('a-scene')
+        let box = document.createElement('a-box')
+        let size = 0.3
+        box.setAttribute('scale', `${size} ${size} ${size}`)
+        box.setAttribute('color', 'red')
+        box.setAttribute('position', position)
+        sceneEl.appendChild(box)
+      }
+    </script>
+  </head>
+
+  <body>
+    <a-scene background="color: #FAFAFA">
+      <a-plane click-event position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4" shadow></a-plane>
+      <a-camera raycaster="objects: *" cursor="rayOrigin: mouse;"></a-camera>
+    </a-scene>
+  </body>
+</html>

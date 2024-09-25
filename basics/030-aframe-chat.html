@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://supereggbert.github.io/aframe-htmlembed-component/dist/build.js"></script>
+    <style>
+      #form {
+        z-index: 1000;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+      }
+      #test {
+        background: #eee;
+        width: 500px;
+        height: 500px;
+        padding: 100px;
+      }
+    </style>
+    <script>
+      const socket = io();
+      socket.on('message', (data) => {
+        console.log(data)
+        let p = document.createElement('p')
+        p.innerHTML = data
+        $('#result').append(p)
+      })
+
+      $(function() {
+        $('button').click(() => {
+          let message = $('#message').val()
+          socket.emit('message', message)
+        })
+      })
+    </script>
+  </head>
+
+  <body>
+    <div id="form">
+      <input id="message" type="text" />
+      <button>Send</button>
+    </div>
+    <a-scene>
+      <a-entity id="main" htmlembed position="0 2.5 -5">
+        <div id="test">
+          <h1>Metaverse Chat</h1>
+          <div id="result"></div>
+        </div>
+      </a-entity>
+      <a-plane click-event position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4" shadow></a-plane>
+      <a-camera raycaster="objects: *" cursor="rayOrigin: mouse;"></a-camera>
+    </a-scene>
+  </body>
+</html>

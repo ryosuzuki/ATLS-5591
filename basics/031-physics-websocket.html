@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+
+    <script>
+      const socket = io();
+      socket.on('message', (data) => {
+        console.log(data)
+        createBall()
+      })
+
+      AFRAME.registerComponent('click-event', {
+        init: function () {
+          this.el.addEventListener('click', event => {
+            let position = event.detail.intersection.point
+            socket.emit('message', position)
+          });
+        }
+      });
+
+      function createBall() {
+        let sceneEl = document.querySelector('a-scene')
+        let sphereEl = document.createElement('a-sphere')
+        sphereEl.setAttribute('radius', 0.1)
+        sphereEl.setAttribute('position', `${Math.random()} ${Math.random() + 3} -4`)
+        sphereEl.setAttribute('dynamic-body', 'shape: auto')
+        sceneEl.appendChild(sphereEl)
+      }
+    </script>
+  </head>
+
+  <body>
+    <a-scene click-event physics="debug: true">
+      <a-plane static-body position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4" shadow></a-plane>
+      <a-camera raycaster="objects: *" cursor="rayOrigin: mouse;"></a-camera>
+    </a-scene>
+  </body>
+</html>
