@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Document Tracking with OpenCV.js</title>
+  <style>
+    video,
+    canvas {
+      display: block;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <script src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let trackingColor = null;
+
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch(function (err) {
+        console.error("Error: " + err);
+      });
+
+    video.addEventListener("click", (event) => {
+      let rect = video.getBoundingClientRect();
+      let x = event.clientX - rect.left;
+      let y = event.clientY - rect.top;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      let imgData = ctx.getImageData(x, y, 1, 1).data;
+      trackingColor = [imgData[0], imgData[1], imgData[2]];
+    });
+
+    video.addEventListener("play", () => {
+      const FPS = 30;
+
+      function processVideo() {
+        if (video.paused || video.ended) {
+          return;
+        }
+
+        let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let mask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        let contours = new cv.MatVector();
+        let hierarchy = new cv.Mat();
+
+        let cap = new cv.VideoCapture(video);
+        cap.read(src);
+
+        if (trackingColor) {
+          let lower = new cv.Mat(src.rows, src.cols, src.type(), [
+            trackingColor[0] - 40,
+            trackingColor[1] - 40,
+            trackingColor[2] - 40,
+            0,
+          ]);
+          let upper = new cv.Mat(src.rows, src.cols, src.type(), [
+            trackingColor[0] + 40,
+            trackingColor[1] + 40,
+            trackingColor[2] + 40,
+            255,
+          ]);
+
+          cv.inRange(src, lower, upper, mask);
+
+          cv.findContours(mask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+          let largestContour = null;
+          let maxArea = 0;
+
+          for (let i = 0; i < contours.size(); i++) {
+            let cnt = contours.get(i);
+            let area = cv.contourArea(cnt, false);
+            if (area > maxArea) {
+              maxArea = area;
+              largestContour = cnt;
+            }
+          }
+
+          if (largestContour) {
+            cv.drawContours(src, contours, -1, [0, 255, 0, 255], 2);
+            let rect = cv.boundingRect(largestContour);
+            cv.rectangle(src, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), [255, 0, 0, 255], 2);
+          }
+
+          lower.delete();
+          upper.delete();
+        }
+
+        cv.imshow("canvas", src);
+
+        setTimeout(processVideo, 1000 / FPS);
+
+        src.delete();
+        mask.delete();
+        contours.delete();
+        hierarchy.delete();
+      }
+      processVideo();
+    });
+  </script>
+</body>
+</html>

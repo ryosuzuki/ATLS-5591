@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv8 Webcam Fullscreen</title>
+    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      video, canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      const labels = [
+        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign",
+        "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+        "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard",
+        "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
+        "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet", "tv",
+        "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock",
+        "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+      ];
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then((stream) => {
+            video.srcObject = stream;
+          });
+
+        const [yolov8Model, nmsModel] = await Promise.all([
+          fetch('https://cdn.glitch.global/fe0f9f3f-f23d-4f7c-ac70-ca299ecbc7eb/yolov8n.onnx?v=1728324147216').then(res => res.arrayBuffer()),
+          fetch('https://cdn.glitch.global/fe0f9f3f-f23d-4f7c-ac70-ca299ecbc7eb/nms-yolov8.onnx?v=1728326848215').then(res => res.arrayBuffer())
+        ]);
+
+        const yolov8 = await ort.InferenceSession.create(yolov8Model);
+        const nms = await ort.InferenceSession.create(nmsModel);
+
+        const topk = 100;
+        const iouThreshold = 0.45;
+        const scoreThreshold = 0.25;
+        const inputShape = [1, 3, 640, 640];
+        const [modelWidth, modelHeight] = inputShape.slice(2);
+
+        function processFrame() {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const mat = cv.matFromImageData(imageData);
+          const matC3 = new cv.Mat(mat.rows, mat.cols, cv.CV_8UC3);
+          cv.cvtColor(mat, matC3, cv.COLOR_RGBA2BGR);
+          const maxSize = Math.max(matC3.rows, matC3.cols);
+          const xPad = maxSize - matC3.cols;
+          const xRatio = maxSize / matC3.cols;
+          const yPad = maxSize - matC3.rows;
+          const yRatio = maxSize / matC3.rows;
+          const matPad = new cv.Mat();
+          cv.copyMakeBorder(matC3, matPad, 0, yPad, 0, xPad, cv.BORDER_CONSTANT);
+
+          const input = cv.blobFromImage(matPad, 1 / 255.0, new cv.Size(modelWidth, modelHeight), new cv.Scalar(0, 0, 0), true, false);
+
+          mat.delete();
+          matC3.delete();
+          matPad.delete();
+
+          const tensor = new ort.Tensor("float32", input.data32F, inputShape);
+          yolov8.run({ images: tensor }).then(({ output0 }) => {
+            const config = new ort.Tensor("float32", new Float32Array([topk, iouThreshold, scoreThreshold]));
+            return nms.run({ detection: output0, config: config });
+          }).then(({ selected }) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            for (let idx = 0; idx < selected.dims[1]; idx++) {
+              const data = selected.data.slice(idx * selected.dims[2], (idx + 1) * selected.dims[2]);
+              const box = data.slice(0, 4);
+              const scores = data.slice(4);
+              const score = Math.max(...scores);
+              const labelIndex = scores.indexOf(score);
+              const labelName = labels[labelIndex] || "Unknown";
+
+              const [x, y, w, h] = [
+                (box[0] - 0.5 * box[2]) * xRatio - xPad / 2,
+                (box[1] - 0.5 * box[3]) * yRatio - yPad / 2,
+                box[2] * xRatio,
+                box[3] * yRatio
+              ];
+
+              ctx.strokeStyle = "red";
+              ctx.lineWidth = 2;
+              ctx.strokeRect(x, y, w, h);
+              ctx.fillStyle = "red";
+              ctx.fillText(`${labelName}, Score: ${score.toFixed(2)}`, x, y > 10 ? y - 5 : 10);
+            }
+          });
+
+          input.delete();
+          requestAnimationFrame(processFrame);
+        }
+
+        video.addEventListener("loadeddata", () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          requestAnimationFrame(processFrame);
+        });
+      });
+    </script>
+  </body>
+</html>

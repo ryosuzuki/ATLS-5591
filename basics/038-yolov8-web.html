@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>YOLOv8 Object Detection App</title>
+    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+  </head>
+  <body>
+    <h1>YOLOv8 Object Detection App</h1>
+    <img id="image" src="https://cdn.glitch.global/fe0f9f3f-f23d-4f7c-ac70-ca299ecbc7eb/sample.jpg?v=1728324170794" alt="Sample Image" crossorigin="anonymous" />
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const image = document.getElementById("image");
+
+        image.onload = () => {
+          detectImage(image);
+        };
+
+        async function detectImage(image) {
+          // YOLOv8 and NMS models fetch in parallel
+          const [yolov8Model, nmsModel] = await Promise.all([
+            fetch('https://cdn.glitch.global/fe0f9f3f-f23d-4f7c-ac70-ca299ecbc7eb/yolov8n.onnx?v=1728324147216').then(res => res.arrayBuffer()),
+            fetch('https://cdn.glitch.global/fe0f9f3f-f23d-4f7c-ac70-ca299ecbc7eb/nms-yolov8.onnx?v=1728326848215').then(res => res.arrayBuffer())
+          ]);
+
+          const yolov8 = await ort.InferenceSession.create(yolov8Model);
+          const nms = await ort.InferenceSession.create(nmsModel);
+
+          const topk = 100;
+          const iouThreshold = 0.45;
+          const scoreThreshold = 0.25;
+          const inputShape = [1, 3, 640, 640];
+          const [modelWidth, modelHeight] = inputShape.slice(2);
+
+          // Image processing with OpenCV
+          const mat = cv.imread(image);
+          const matC3 = new cv.Mat(mat.rows, mat.cols, cv.CV_8UC3);
+          cv.cvtColor(mat, matC3, cv.COLOR_RGBA2BGR);
+          const maxSize = Math.max(matC3.rows, matC3.cols);
+          const xPad = maxSize - matC3.cols;
+          const xRatio = maxSize / matC3.cols;
+          const yPad = maxSize - matC3.rows;
+          const yRatio = maxSize / matC3.rows;
+          const matPad = new cv.Mat();
+          cv.copyMakeBorder(matC3, matPad, 0, yPad, 0, xPad, cv.BORDER_CONSTANT);
+
+          const input = cv.blobFromImage(matPad, 1 / 255.0, new cv.Size(modelWidth, modelHeight), new cv.Scalar(0, 0, 0), true, false);
+
+          mat.delete();
+          matC3.delete();
+          matPad.delete();
+
+          const tensor = new ort.Tensor("float32", input.data32F, inputShape);
+          const config = new ort.Tensor("float32", new Float32Array([topk, iouThreshold, scoreThreshold]));
+          const { output0 } = await yolov8.run({ images: tensor });
+          const { selected } = await nms.run({ detection: output0, config: config });
+
+          const boxes = [];
+
+          for (let idx = 0; idx < selected.dims[1]; idx++) {
+            const data = selected.data.slice(idx * selected.dims[2], (idx + 1) * selected.dims[2]);
+            const box = data.slice(0, 4);
+            const scores = data.slice(4);
+            const score = Math.max(...scores);
+            const label = scores.indexOf(score);
+
+            const [x, y, w, h] = [
+              (box[0] - 0.5 * box[2]) * xRatio,
+              (box[1] - 0.5 * box[3]) * yRatio,
+              box[2] * xRatio,
+              box[3] * yRatio,
+            ];
+
+            boxes.push({
+              label: label,
+              probability: score,
+              bounding: [x, y, w, h],
+            });
+          }
+
+          console.log(boxes);
+          input.delete();
+        }
+      });
+    </script>
+  </body>
+</html>

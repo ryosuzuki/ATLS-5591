@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webcam with OpenCV.js (Red Tracking)</title>
+  <style>
+    video, canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Webcam with OpenCV.js (Red Tracking)</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch(function(err) {
+        console.error("Error: " + err);
+      });
+
+    video.addEventListener('play', () => {
+      const FPS = 30;
+
+      function processVideo() {
+        if (video.paused || video.ended) {
+          return;
+        }
+
+        let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let hsv = new cv.Mat(video.height, video.width, cv.CV_8UC3);
+        let mask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+
+        let cap = new cv.VideoCapture(video);
+        cap.read(src);
+
+        cv.cvtColor(src, hsv, cv.COLOR_RGBA2RGB);
+        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
+
+        let lowerRed = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [0, 120, 70, 0]);
+        let upperRed = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [10, 255, 255, 0]);
+
+        cv.inRange(hsv, lowerRed, upperRed, mask);
+        cv.imshow('canvas', mask);
+
+        setTimeout(processVideo, 1000 / FPS);
+
+        src.delete();
+        hsv.delete();
+        mask.delete();
+        lowerRed.delete();
+        upperRed.delete();
+      }
+      processVideo();
+    });
+  </script>
+</body>
+</html>

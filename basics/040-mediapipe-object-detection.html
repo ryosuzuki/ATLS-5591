@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mediapipe Object Detection</title>
+  <style>
+    video, canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/objectron/objectron.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+  <h1>Mediapipe Object Detection (Objectron)</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <script>
+    const videoElement = document.getElementById('video');
+    const canvasElement = document.getElementById('canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+
+    const objectron = new Objectron({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/objectron/${file}`,
+    });
+
+    objectron.setOptions({
+      modelName: 'Cup', // "Cup", "Chair", "Shoe", "Camera"
+      maxNumObjects: 1,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+
+    objectron.onResults(onResults);
+
+    function onResults(results) {
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(
+        results.image, 0, 0, canvasElement.width, canvasElement.height);
+      if (results.detectedObjects.length > 0) {
+        for (const detectedObject of results.detectedObjects) {
+          const landmarks = detectedObject.landmarks;
+          canvasCtx.beginPath();
+          for (const landmark of landmarks) {
+            canvasCtx.arc(landmark.x * canvasElement.width, landmark.y * canvasElement.height, 5, 0, 2 * Math.PI);
+          }
+          canvasCtx.fillStyle = "rgba(0, 255, 0, 0.5)";
+          canvasCtx.fill();
+        }
+      }
+      canvasCtx.restore();
+    }
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await objectron.send({image: videoElement});
+      },
+      width: 640,
+      height: 480,
+    });
+    camera.start();
+  </script>
+</body>
+</html>
